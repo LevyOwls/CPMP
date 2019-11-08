@@ -37,8 +37,35 @@ public class Main
 			//lee el archivo
 			s.review();
 			s.showTime();
+		
+			for (i=0;i<s.totalContenedores();i++)
+			{
+				s.fill();
+				s.review();
+			}
 			System.out.println();
-			s.generateTiers();
+			s.showTime();
+			System.out.println("//*******************"+s.totalContenedores());
+			
+			
+			//REVISAR COLUMAS DESORDENADAS Y SOLO A ESAS REALIZARLE SUBCOLUMNSORT
+			while (!s.isOrdenado())
+			{
+				s.columnSort();
+				s.review();
+				
+				s.showTime();
+				System.out.println("//*******************"+s.totalContenedores());
+				
+			}
+			
+			System.out.println();
+			s.showTime();
+			System.out.println("movimientos: "+s.getMovs());
+			System.out.println("//*******************"+s.totalContenedores());
+			
+			System.out.println("mejor columna a proseguir:  "+s.select_column());
+			
 
 			//System.out.println(s.disorderlyElements());
 

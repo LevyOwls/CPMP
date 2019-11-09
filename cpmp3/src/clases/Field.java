@@ -1,3 +1,5 @@
+
+
 package clases;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -147,7 +149,7 @@ public class Field
 		int helper;
 		int tiers[]=new int[altura];
 		
-		//SE ASIGNA TAMAÑO CERO A TODOS LOS TIERS
+		//SE ASIGNA TAMAÃ‘O CERO A TODOS LOS TIERS
 		for (i=0;i<tiers.length;i++)
 		{
 			tiers[i]=0;
@@ -861,7 +863,7 @@ public class Field
 	}
 	
 	/**
-	 * @param n			NUMERO MAXIMO DE TAMAÑO DE COLUMNA
+	 * @param n			NUMERO MAXIMO DE TAMAÃ‘O DE COLUMNA
 	 * @param c_o		COLUMNA POR LA CUAL QUIERO REALIZAR EL SACRIFICIO
 	 * @return			SI SE LOGRO O NO
 	 */

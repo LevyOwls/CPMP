@@ -1,0 +1,13 @@
+el formato de lectura es el siguiente
+
+Columnas	Contenedores
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)
+Cantidad 	(contenedor 1)	(contenedor 2)	(contenedor n-1) .....(contenedor n)

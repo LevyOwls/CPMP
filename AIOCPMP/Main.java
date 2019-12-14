@@ -34,64 +34,60 @@ public class Main
 		
 		Field s=new Field();
 		int i;
+		
 		while (instances.size()!=0)
 		{	
 			s.setMovs(0);
+			
 			dir=(File)instances.remove(0);
 			s.readFile(dir);
 			//lee el archivo
 			s.review();
-			s.showTime();
-			System.out.println();
-			
-			for (i=0;i<s.totalContenedores();i++)
-			{
-				s.AIOfill();
-			}
-			int aux;
-			aux=s.firstEmpty();
+			//s.showTime();
 			System.out.println();
 			s.showTime();
-			System.out.println();
-			while (s.firstEmpty()!=-1 && !s.isOrdenado())
+			//s.excelShowTime();
+			while (!s.isOrdenado())
 			{
-				s.AIOEmptyFill(aux);
-				aux=s.firstEmpty();
-			}
-			for (i=0;i<s.totalContenedores();i++)
-			{
-				s.AIOfill();
+
+				while (s.isFillPosible())
+				{
+					s.AIOfill();
+					//System.out.println();
+					//s.showTime();
+					//System.out.println("Movimientos hasta ahora: "+s.getMovs());
+				}
+				if (s.isOrdenado())
+				{
+					System.out.println();
+					//s.printMovs();
+					break;
+					
+				}
+				
+				s.AIOVacateColumn();
 			}
 			
-			System.out.println();
+			//s.showTime();
+			/*System.out.println();
 			s.showTime();
+			System.out.println();*/
+			//s.showTime();
+			System.out.print(dir.toString().substring(52) +" Movimientos: "+s.getMovs());
 			System.out.println();
-			
-			int selector=s.select_column();		
-			if (selector!=-1)
-			{
-				s.AIOsacrifice(selector);
-			}
-			
-			System.out.println();
+			s.verificar();
 			s.showTime();
-			System.out.println();
 			
-			for (i=0;i<s.totalContenedores();i++)
-			{
-				s.AIOfill();
-			}
-			
-			System.out.println();
-			s.showTime();
-			System.out.println();
+			//s.showTime();
+			//System.out.println(s.totalContenedores());
 			
 		}	
 		
 		
 		TFin = System.currentTimeMillis();
 		tiempo = TFin - TInicio; 
-		System.out.println("Tiempo de ejecución en milisegundos: " + tiempo+ "movimientos realizados: "+s.getMovs());
+		System.out.println();
+		System.out.println(" Tiempo de ejecución en milisegundos: " + tiempo);
 		
 		//s.showTime();
 	}

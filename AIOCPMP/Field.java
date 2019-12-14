@@ -12,9 +12,10 @@ import javax.sound.sampled.Line;
 public class Field 
 {
 	private static ArrayList field=new ArrayList();
-	private static int hMax=5;
+	private static int hMax=8;
 	private static int movs=0;
 	private static int columns;
+	private static ArrayList movimientos=new ArrayList();
 	
 	
 	public void setField(ArrayList l)
@@ -405,12 +406,20 @@ public class Field
 	 */
 	public static void atomic_Move(int c_o,int c_d) 
 	{
+		
+		//RECORDAR QUE EL MOVIMIENTO SERA 0 A 1, 2 A 3, 4 A 5 ETC ETC
+		
+		//SE GENERA UNA LISTA CON LOS MOVIMIENTOS HECHOS
+		movimientos.add(c_o);
+		movimientos.add(c_d);
 		Column temp=(Column)field.get(c_o);
 		int aux=(int)temp.quitar();
 		temp=(Column)field.get(c_d);
 		temp.add(aux);
 		movs++;
 		review();
+		
+		
 	}	
 	
 	
@@ -502,13 +511,7 @@ public class Field
 		}
 		else
 		{
-			ArrayList disorder=disorderlyElements();
-			if (disorder.size()==0)
-			{
-				return -1;
-			}
-			int dis=(int)disorder.get(disorder.size()-1);
-			
+			int big=0;
 			for (i=0;i<tops.size();i++)
 			{
 				temp=(Column)field.get(i);
@@ -516,9 +519,10 @@ public class Field
 				if (i!=c_o)
 				{
 					aux=(int)tops.get(i);
-					//EN CASO DE QUE EXISTA EL NUMERO MAYOR DENTRO DE LOS TOPS Y ESTE DESORDENADA LA COLUMNA DE DONDE SE OBTENGA
-					if (dis==aux && !temp.isLock())
+					//AUX DEBE SER MAYOR EL MAYOR DENTRO DE LOS DESORDENADOS.
+					if (!temp.isLock() && aux>big)
 					{
+						big=aux;
 						bestCol=i;
 					}
 				}
@@ -568,6 +572,60 @@ public class Field
 	/**
 	 * EL PREPROCESO, INTENTA DISMINUIR LA CANTIDAD DE PASOS QUE HACER A FUTURO.
 	 */
+	/*public static void AIOfill()    VERSION ANTIGUA
+	{
+		int i;
+		Column temp;
+		ArrayList size=new ArrayList();
+		ArrayList columna=new ArrayList();
+		//SE LEE EL TAMAÑO Y LA COLUMNA 
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			size.add(temp.size());
+			columna.add(i);
+		}
+		
+		//SE ORDENA DE MAYOR A MENOR, CON UN COLUMNSORT PARA REPETIR LOS PASOS EN AMBAS LISTAS
+		
+		columna=bubbleSort(size, columna);
+		//LA IDEA ES TENER UNA LISTA CON LAS COLUMNAS ORGANIZADAS POR TAMAÑO, DE MAYOR A MENOR
+		 //PARA ESTO ULTIMO, SE INVIERTE LA LISTA COLUMNAS
+		int aux;
+		 Collections.reverse(columna);
+		 
+		 //System.out.println(columna);
+		 
+		 //UNA VEZ OBTENIDAS LAS COLUMNAS POR ORDEN DE TAMAÑO (MENOR A MAYOR) SE RELLENAN
+		 int c_d;
+		 
+		
+		 for (i=0;i<columna.size();i++)
+		 {
+			 //SE OBTIENE LA COLUMNA
+			 c_d=(int)columna.get(i);
+			 temp=(Column)field.get(c_d);
+			 //SE VERIFICA EL TAMAÑO
+			 
+			 //SI LA ALTURA DE LA COLUMNA TEMP NO SUPERA LA ALTURA MAXIMA Y ESTA ORDENADO
+			 if (temp.size()<hMax && temp.isLock())
+			 {
+				 aux=columnBestFill(c_d);
+				 
+				 //MIENTRAS SE PUEDA Y NO SUPERE LA ALTURA MAXIMA
+				 while(aux!=-1 && temp.size()<hMax)
+				 {
+					 atomic_Move(aux,c_d);
+					 aux=columnBestFill(c_d);
+				 }
+			 }
+			 
+		 }
+	}*/
+	
+	/**
+	 * EL PREPROCESO, INTENTA DISMINUIR LA CANTIDAD DE PASOS QUE HACER A FUTURO.
+	 */
 	public static void AIOfill()
 	{
 		int i;
@@ -594,7 +652,28 @@ public class Field
 		 
 		 //UNA VEZ OBTENIDAS LAS COLUMNAS POR ORDEN DE TAMAÑO (MENOR A MAYOR) SE RELLENAN
 		 int c_d;
-
+		 
+		 for (i=0;i<columna.size();i++)
+		 {
+			 //SE OBTIENE LA COLUMNA
+			 c_d=(int)columna.get(i);
+			 temp=(Column)field.get(c_d);
+			 
+			 //SI LA ALTURA ES MENOR A HMAX Y ESTA ORDENADO
+			 if (temp.size()<hMax && temp.isLock())
+			 {
+				 aux=columnBestFill(c_d);
+				 //EN CASO DE QUE SE PUEDA REALIZAR UN MOVIMIENTO
+				 if (aux!=-1)
+				 {
+					 //REALIZA EL MOVIMIENTO Y VUELVE A INTENTAR CON LA PRIMERA COLUMNA
+					 atomic_Move(aux, c_d);
+					 i=0;
+				 }
+			 }
+		 }
+		 /*
+		  * 
 		 for (i=0;i<columna.size();i++)
 		 {
 			 //SE OBTIENE LA COLUMNA
@@ -615,9 +694,8 @@ public class Field
 				 }
 			 }
 			 
-		 }
+		 }*/
 	}
-	
 	public static void AIOEmptyFill(int c_o)
 	{
 		ArrayList tops=getTops();
@@ -656,6 +734,7 @@ public class Field
 		ArrayList size=new ArrayList();
 		ArrayList columna=new ArrayList();
 		int i;
+		int aux;
 		Column temp;
 		//SE LEE EL TAMAÑO Y LA COLUMNA 
 		for (i=0;i<field.size();i++)
@@ -667,31 +746,9 @@ public class Field
 		
 		//SE ORDENA DE MAYOR A MENOR, CON UN COLUMNSORT PARA REPETIR LOS PASOS EN AMBAS LISTAS
 		
-		boolean sorted = false;
-		int aux;
-		//BUBBLESORT
-		 while (!sorted)
-		 {
-			 sorted = true;
-			 for (i=0;i<size.size()-1;i++)
-			 {
-				 //SI I>I+1 CAMBIAN DE POSICION
-				 if ((int)size.get(i)>(int)size.get(i+1))
-				 {
-					 //SE ORDENA POR TAMAÑO
-					 aux=(int)size.get(i);
-					 size.set(i,size.get(i + 1));
-					 size.set(i + 1,aux);
-					 //SE ORDENA POR COLUMNA
-					 aux=(int)columna.get(i);
-					 columna.set(i,columna.get(i + 1));
-					 columna.set(i + 1,aux);
-					 
-					 sorted=false;
-				 }
-			 }
-		 }
+		ArrayList col=bubbleSort(size, columna);
 		 
+		columna=col;
 		 //UNA VEZ OBTENIDAS LAS COLUMNAS ORDENADAS POR ALTURA, SE REVISA PARA SACRIFICIO LA MENOR
 		 //SI ESTAN ORDENADAS, Y SE PUEDE ORDENAR EN OTRO LADO, MEJOR
 		 int columnTop;
@@ -737,24 +794,612 @@ public class Field
 			 
 		 }
 	}
+	
+	/**
+	 * DEFINE SI AIOFILL PUEDE REALIZARSE
+	 * @return							TRUE SI PUEDE REALIZARSE OTRA ITERACION, FALSE EN CASO CONTRARIO
+	 */
+	public static boolean isFillPosible ()
+	{
+		Column temp;
+		int i;
+		int aux;
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			//SI LA ALTURA ES MENOR A HMAX Y ESTA ORDENADO
+			if (temp.size()<hMax && temp.isLock())
+			{
+				 aux=columnBestFill(i);
+				 //EN CASO DE QUE SE PUEDA REALIZAR UN MOVIMIENTO
+				 if (aux!=-1)
+				 {
+					 //REALIZA EL MOVIMIENTO Y VUELVE A INTENTAR CON LA PRIMERA COLUMNA
+					 return true;
+				 }
+			}
+		}
+		return false;
+	}
 
+	/**
+	 * 
+	 * 	Genera los espacios disponibles por tier dentro de field. Se ve de arriba hacia abajo
+	 * 
+	 * 
+	 */
+	public static int[] generateTiers()
+	{
+		Column temp;
+		int i,j;
+		int altura=hMax;
+		int helper;
+		int tiers[]=new int[altura];
+		
+		//SE ASIGNA TAMAÑO CERO A TODOS LOS TIERS
+		for (i=0;i<tiers.length;i++)
+		{
+			tiers[i]=0;
+		}
+		
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			helper=hMax-temp.size();
+			for (j=0;j<helper;j++)
+			{
+				tiers[j]++;
+			}
+		}
+		
+		for (i=0;i<tiers.length;i++)
+		{
+			System.out.println(tiers[i]+"   H: "+altura);
+			altura--;
+		}
+		return tiers;
+	}
+	
+	/**
+	 * REMUEVE UNA COLUMNA TOTALMENTE (O CASI, DEPENDE DE DISORDERLY ELLEMENTS)
+	 */
+	public static void vacateColumn()
+	{
+		//SE ENCUENTRA EL NUMERO MENOR DE COLUMNA
+		int i,menor=hMax;
+		Column temp;
+		ArrayList cols=new ArrayList();
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			
+			if (!temp.isLock() && temp.size()<menor)
+			{
+				menor=temp.size();
+			}
+		}
+	
+		//SE GUARDAN LA/LAS COLUMNAS QUE TENGAN EL TAMAÑO MINIMO
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			if (!temp.isLock() && temp.size()==menor)
+			{
+				cols.add(i);
+			}
+		}
+		int col,aux;
+		//EN CASO DE QUE EXISTA MAS DE UNA COLUMNA
+		if (cols.size()>1)
+		{
+			int best=0;
+			int mayor=0;
+			for (i=0;i<cols.size();i++)
+			{
+				aux=(int)cols.get(i);
+				temp=(Column)field.get(aux);
+				col=aux;
+				aux=temp.biggerNumber();
+				if (aux>mayor)
+				{
+					mayor=aux;
+					best=col;
+				}
+			}
+			col=best;
+			//AQUI CON EL NUMERO DE COLUMNA SE COMIENZAN A RETIRAR SUS ELEMENTOS
+			temp=(Column)field.get(col);
+			while (temp.size()!=0)
+			{
+				aux=bestVacateC_d(col);
+				if (aux!=-1)
+				{
+					//SE REALIZA UN MOVIMIENTO
+					atomic_Move(col, aux);
+					//SE REVISA SI QUEDO ORDENADA DE FORMA EFICIENTE
+					if (temp.isLock() && temp.size()!=0)
+					{
+						if ((int)temp.get(temp.size()-1)==bigDisTop())
+						{
+							break;
+						}
+					}
+					
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+		}
+		else
+		{
+			col=(int)cols.get(0);
+			//COMO SOLO HAY UNA COLUMNA, SE COMIENZAN A RETIRAR SUS ELEMENTOS
+			temp=(Column)field.get(col);
+			while (temp.size()!=0)
+			{
+				aux=bestVacateC_d(col);
+				if (aux!=-1)
+				{
+					//SE REALIZA UN MOVIMIENTO
+					atomic_Move(col, aux);
+					//SE REVISA SI QUEDO ORDENADA DE FORMA EFICIENTE
+					if (temp.isLock() && temp.size()!=0)
+					{
+						if ((int)temp.get(temp.size()-1)==bigDisTop())
+						{
+							break;
+						}
+					}
+					
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+		}
+		
+		
+		
+		
+	}
+	
+	/**
+	 * RETORNA LA MEJOR COLUMNA DESTINO PARA APOYAR UN CONTENEDOR, ESTA SE EVALUA OBSERVANDO QUE SEA MENOR AL CONTENEDOR QUE SE LE QUIERE PONER ENCIMA Y LA DIFERENCIA SEA INFIMA
+	 * @param c_o 		COLUMNA ORIGEN
+	 * @return 			MEJOR UBICACION POSIBLE PARA RETIRAR EL CONTENEDOR DE LA COLUMNA
+	 */
+	public static int bestVacateC_d(int c_o)
+	{
+		
+		int i;
+		ArrayList tops=getTops();
+		Column temp;
+		int coTop=(int)tops.get(c_o);
+		int col=-1;
+		int dif=200;
+		int aux;
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			
+			if (i!=c_o && temp.size()<hMax)
+			{
+				aux=(int)tops.get(i);
+				if (coTop>=aux)
+				{
+					if ((coTop-aux)<dif)
+					{
+						col=i;
+					}
+				}
+				
+			}
+		}
+		
+		
+		return col;
+	}
+	
+	
+	public static int bigDisTop()
+	{
+		int i;
+		Column temp;
+		ArrayList tops=new ArrayList();
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			if (!temp.isLock() && !temp.isEmpty())
+			{
+				tops.add(temp.get(temp.size()-1));
+			}
+		}
+		
+		Collections.sort(tops);
+		return (int)tops.get(tops.size()-1);
+	}
+	
+	
+	/**
+	 * REMUEVE UNA COLUMNA TOTALMENTE (O CASI, DEPENDE DE DISORDERLY ELLEMENTS)
+	 */
+	public static void vacateColumn2()
+	{
+		int col=select_column();
+		Column temp=(Column)field.get(col);
+		int aux;
+		while (temp.size()!=0)
+		{
+			aux=bestVacateC_d(col);
+			if (aux!=-1)
+			{
+				//SE REALIZA UN MOVIMIENTO
+				atomic_Move(col, aux);
+				//SE REVISA SI QUEDO ORDENADA DE FORMA EFICIENTE
+				if (temp.isLock() && temp.size()!=0)
+				{
+					if ((int)temp.get(temp.size()-1)==bigDisTop())
+					{
+						break;
+					}
+				}
+				
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	
+	public static void vacateColumn3()
+	{
+		int i;
+		Column temp;
+
+		ArrayList dis=disorderlyElements();
+		//EL MAYOR CONTENEDOR DESORDENADO
+		int bigDis=(int)dis.get(dis.size()-1);
+		
+		ArrayList posibles=new ArrayList();
+		
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			
+			//SI TEMP ESTA DESORDENADO
+			if (!temp.isLock())
+			{
+				if (temp.indexOf(bigDis)!=-1)
+				{
+					posibles.add(i);
+				}
+				
+			}
+		}
+		
+		int aux=random(posibles.size());
+	
+		temp=(Column)field.get((int)posibles.get(aux));
+		
+		int col=(int)posibles.get(aux);
+		while (temp.size()!=0)
+		{
+			aux=bestVacateC_d(col);
+			if (aux!=-1)
+			{
+				//SE REALIZA UN MOVIMIENTO
+				atomic_Move(col, aux);
+				//SE REVISA SI QUEDO ORDENADA DE FORMA EFICIENTE
+				if (temp.isLock() && temp.size()!=0)
+				{
+					if ((int)temp.get(temp.size()-1)==bigDisTop())
+					{
+						break;
+					}
+				}
+				
+			}
+			else
+			{
+				break;
+			}
+		}
+		
+		
+	}
+	
+	/**
+	 * BUSCA LA CANTIDAD DE CONTENEDORES QUE SE LE PUEDEN SOBREPONER CON LOS TOPS ACTUALES
+	 * @param c_o				COLUMNA ORIGEN
+	 * @return					CANTIDAD DE CONTENEDORES DISPONIBLES PARA SOBREPONERSE
+	 */
+	public static int Contador(int c_o)
+	{
+		int cont=0;
+		int i,aux;
+		Column temp=(Column)field.get(c_o);
+		
+		//NUMERO AL CUAL SE LE QUIERE BUSCAR LA CANTIDAD DE CONTENEDORES QUE SE PUEDE SOBREPONER
+		
+		
+		int top=(int)temp.get(temp.size()-1);
+		
+		for (i=0;i<field.size();i++)
+		{
+			//COLUMNA ACTUAL
+			temp=(Column)field.get(i);
+			
+			//SI LA COLUMNA ACTUAL ESTA DESORDENADA, NO ES LA COLUMNA ORIGEN Y NO ESTA VACIA
+			if (!temp.isLock() && i!=c_o && !temp.isEmpty())
+			{
+				//AUX TOMA EL VALOR DE EL CONTENEDOR TOP 
+				aux=(int)temp.get(temp.size()-1);
+			
+				//EN CASO DE QUE SEA MENOR AL TOP DE C_O, SE CONSIDERA UN CANDIDATO DISPONIBLE
+				if (aux<=top)
+				{
+					cont++;
+				}
+			}
+		}
+		
+		return cont;
+	}
 	
 	
 	
 	
+	public static ArrayList getBottom()
+	{
+		ArrayList tops=new ArrayList();
+		int i;
+		int aux;
+		Column temp;
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			if (!temp.isEmpty())
+			{
+				aux=(int)temp.get(0);
+				tops.add(aux);
+			}
+			else
+			{
+				tops.add(0);
+			}
+		}
+		return tops;
+	}
+	
+	public static int dif(int n1,int n2)
+	{
+		if (n1>=n2)
+		{
+			return n1-n2;
+		}
+		
+		return n2-n1;
+		
+	}
 	
 	
+	public static void AIOVacateColumn()
+	{
+		Column temp;
+		int i;
+
+		//int col=selectColToVacate();
+		
+		//int col=select_column();**
+		
+		int col=selectMinumCol();
+		temp=(Column)field.get(col);
+		int selector;
+		
+		while (temp.size()!=0)
+		{
+			
+			//PRIMERO SE VE SI PUEDE UBICARSE EN OTRO LUGAR AHORRANDO MOVIMIENTOS
+			selector=posibleMove((int)temp.get(temp.size()-1),col);
+			if (selector!=-1)
+			{
+				atomic_Move(col,selector);
+				
+				if(temp.isLock() && !temp.isEmpty())
+				{
+					if (Contador(col)+temp.size()>=hMax)
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				//EN CASO DE QUE NO PUEDA ENVIARSE A UN LUGAR DONDE SE AHORRE MOVIMIENTO SE MUEVE A UN LUGAR CONVENIENTE
+				selector=bestVacateC_d(col);
+				if (selector!=-1)
+				{
+					atomic_Move(col,selector);
+					
+					if(temp.isLock() && !temp.isEmpty())
+					{
+						if (Contador(col)+temp.size()>=hMax)
+						{
+							break;
+						}
+					}
+				}
+				//SI NO PUEDE ENVIARSE A UN LUGAR CONVENIENTE, SE REALIZA UN MOVIMIENTO ERRONEO A PROPOSITO
+				else
+				{
+					selector=badMove(col);
+					
+					atomic_Move(col,selector);
+					
+					if(temp.isLock() && !temp.isEmpty())
+					{
+						if (Contador(col)+temp.size()>=hMax)
+						{
+							break;
+						}
+					}
+					
+				}
+			}
+		}
+		
+	}
 	
 	
+	public static int selectColToVacate()
+	{
+		Column temp;
+		int i,j,aux;
+		
+		double best=0;
+		double promedio=0;
+		int col=-1;
+		for (i=0;i<Field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			//OBTIENE UNA COLUMNA
+			if (!temp.isLock())
+			{
+				promedio=0;
+				for (j=0;j<temp.size();j++)
+				{
+					aux=(int)temp.get(j);
+					promedio=promedio+aux;
+				}
+				//SE OBTIENE EL PROMEDIO
+				promedio=promedio/temp.size();
+				//EN CASO DE QUE EL PROMEDIO SUPERE AL PROMEDIO ANTERIOR, SE GUARDA
+				if (promedio>best)
+				{
+					best=promedio;
+					col=i;
+				}
+			}
+		}
+		
+		return col;
+	}
+	
+	public static int selectMinumCol()
+	{
+		ArrayList size=new ArrayList();
+		ArrayList columna=new ArrayList();
+		int i;
+		int aux;
+		Column temp;
+		//SE LEE EL TAMAÑO Y LA COLUMNA 
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			size.add(temp.size());
+			columna.add(i);
+		}
+		
+		//SE ORDENA DE MAYOR A MENOR, CON UN COLUMNSORT PARA REPETIR LOS PASOS EN AMBAS LISTAS
+		
+		ArrayList col=bubbleSort(size, columna);
+		 
+		columna=col;
+		
+		return (int)columna.get(0);
+		
+		
+	}
+	
+	public static int badMove(int c_o)
+	{
+		int i;
+		Column temp=(Column)field.get(c_o);
+		int menorDif=100000;
+		int dif,aux;
+		int col=-1;
+		int top=(int)temp.get(temp.size()-1);
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			
+			if (i!=c_o && temp.size()<hMax)
+			{
+				aux=(int)temp.get(temp.size()-1);
+				if (dif(aux,top)<menorDif)
+				{
+					menorDif=dif(aux,top);
+					col=i;
+				}
+			}
+		}
+		return col;
+	
+	}
+	
+	//IMPRIME UN LISTADO CON LOS MOVIMIENTOS REALIZADOS
+	public static void printMovs()
+	{
+		int i;
+		System.out.println();
+		for (i=0;i<movimientos.size();i++)
+		{
+			System.out.println(movimientos.get(i));
+		}
+	}
 	
 	
+	public static void excelShowTime()
+	{
+		int i;
+		int j;
+		Column temp;
+		int aux;
+		for (i=0;i<field.size();i++)
+		{
+			temp=(Column)field.get(i);
+			
+			for (j=0;j<temp.size();j++)
+			{
+				aux=(int)temp.get(j);
+				System.out.print(aux+"\t");
+			}
+			
+			System.out.println();
+			
+		}
+	}
 	
-	
-	
-	
-	
-	
-	
+	public static void verificar()
+	{
+		Collections.reverse(movimientos);
+		int i;
+		int aux,aux2;
+		int movsize=movimientos.size();
+		for (i=0;i<movsize;i++)
+		{
+			
+			aux=(int)movimientos.get(i);
+			i++;
+			aux2=(int)movimientos.get(i);
+			//			0	1
+			atomic_Move(aux,aux2);
+			//2
+			
+			
+			if (i>=movimientos.size())
+			{
+				break;
+			}
+		}
+		
+	}
 	
 }
 	
